@@ -1,0 +1,9 @@
+package com.weather.forcast.dto;
+
+public class WeatherDTO {
+ private String weatherCondition;
+ private Double temperature;
+ private Double humidity;
+ private Double pressure;
+ private Double heatIndex;
+}

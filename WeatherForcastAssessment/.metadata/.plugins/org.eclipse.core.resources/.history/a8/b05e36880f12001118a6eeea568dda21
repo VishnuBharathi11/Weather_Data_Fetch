@@ -1,0 +1,5 @@
+package com.weather.forcast.service;
+
+public class WeatherService {
+	
+}

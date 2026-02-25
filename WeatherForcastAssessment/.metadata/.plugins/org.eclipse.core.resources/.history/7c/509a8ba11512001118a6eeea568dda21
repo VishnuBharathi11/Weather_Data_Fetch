@@ -1,0 +1,95 @@
+package com.weather.forcast.service.impl;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.weather.forcast.dto.MonthlyTemperatureDTO;
+import com.weather.forcast.dto.WeatherResponseDTO;
+import com.weather.forcast.entity.WeatherData;
+import com.weather.forcast.repository.WeatherRepository;
+import com.weather.forcast.service.WeatherService;
+import com.weather.forcast.util.CsvUtil;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class WeatherServiceImpl implements WeatherService{
+	private final WeatherRepository weatherRepository;
+	@Override
+	public void uploadCsv(MultipartFile file) {
+		try {
+			List<WeatherData> data=CsvUtil.parse(file.getInputStream());
+			weatherRepository.saveAll(data);
+		} catch (Exception e) {
+			throw new RuntimeException("CSV upload failed");
+		}
+	}
+	@Override
+	public List<WeatherResponseDTO> getWeatherByDate(LocalDate date){
+		return weatherRepository.findByDate(date)
+				.stream()
+				.map(data->WeatherResponseDTO.builder()
+						.weatherCondition(data.getWeatherCondition())
+						.temperature(data.getTemperature())
+						.humidity(data.getHumidity())
+						.pressure(data.getPressure())
+						.build())
+				.collect(Collectors.toList());
+	}
+	 @Override
+	    public List<WeatherResponseDTO> getWeatherByMonth(int month) {
+	        return weatherRepository.findByDateMonth(month)
+	        		.stream()
+					.map(data->WeatherResponseDTO.builder()
+							.weatherCondition(data.getWeatherCondition())
+							.temperature(data.getTemperature())
+							.humidity(data.getHumidity())
+							.pressure(data.getPressure())
+							.build())
+					.collect(Collectors.toList());
+	    }
+	@Override
+	public List<MonthlyTemperatureDTO> getYearlyStats(int year) {
+		List<WeatherData> yearlyData=weatherRepository.findByYear(year);
+		Map<Integer, List<WeatherData>> groupByMonth=
+				yearlyData.stream()
+				.collect(Collectors.groupingBy(d->d.getDate().getMonthValue()));
+		List<MonthlyTemperatureDTO> stats= new ArrayList<>();
+		for (Map.Entry<Integer, List<WeatherData>> entry : groupByMonth.entrySet()) {
+			List<Double> temps=entry.getValue()
+					.stream()
+					.map(WeatherData::getTemperature)
+					.sorted()
+					.collect(Collectors.toList());
+			Double min=temps.get(0);
+			Double max=temps.get(temps.size()-1);
+			Double median=calculateMedian(temps);
+			stats.add(MonthlyTemperatureDTO.builder()
+					.month(entry.getKey())
+					.minTemperature(min)
+					.maxTemperature(max)
+					.medianTemperature(median)
+					.build());
+		}
+	}
+	private Double calculateMedian(List<Double> list) {
+		int size=list.size();
+		if(size==0) {
+			return 0.0;
+		}
+		if(size%2==0) {
+			return (list.get(size/2-1)+list.get(size/2))/2;
+		}
+		else {
+			return list.get(size/2);
+		}
+	}
+	
+}

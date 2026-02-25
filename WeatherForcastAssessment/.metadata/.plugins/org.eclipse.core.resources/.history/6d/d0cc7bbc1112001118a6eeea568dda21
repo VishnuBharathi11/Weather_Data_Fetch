@@ -1,0 +1,7 @@
+package com.weather.forcast.service.impl;
+
+import com.weather.forcast.service.WeatherService;
+
+public class WeatherServiceImpl implements WeatherService{
+
+}

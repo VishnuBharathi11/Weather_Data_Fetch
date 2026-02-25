@@ -1,0 +1,22 @@
+package com.weather.forcast.entity;
+
+import java.time.LocalDate;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Builder;
+import lombok.Data;
+@Entity
+@Table(name="weather_data")
+@Data
+@Builder
+public class WeatherData {
+	@Id
+	private Long id;
+	private LocalDate data;
+	private Double temperature;
+	private Double humidity;
+	private Double pressure;
+	private Double heatIndex;
+	private String weatherCondition;
+}

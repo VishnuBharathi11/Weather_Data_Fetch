@@ -1,0 +1,5 @@
+package com.weather.forcast.controller;
+
+public class WeatherController {
+
+}
